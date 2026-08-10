@@ -5,71 +5,66 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>用户管理 - Powered by MinDoc</title>
+    <title>{{i18n .Lang "mgr.user_mgr"}} - Powered by MinDoc</title>
 
     <!-- Bootstrap -->
-    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="{{cdncss "/static/bootstrap/css/bootstrap.min.css"}}" rel="stylesheet">
+    <link href="{{cdncss "/static/font-awesome/css/font-awesome.min.css"}}" rel="stylesheet">
 
-    <link href="/static/css/main.css" rel="stylesheet">
+    <link href="{{cdncss "/static/css/main.css" "version"}}" rel="stylesheet">
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
     <script src="/static/html5shiv/3.7.3/html5shiv.min.js"></script>
     <script src="/static/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
+    <style type="text/css">
+        .table>tbody>tr>td{vertical-align: middle;}
+    </style>
 </head>
 <body>
 <div class="manual-reader">
     {{template "widgets/header.tpl" .}}
     <div class="container manual-body">
         <div class="row">
-            <div class="page-left">
-                <ul class="menu">
-                    <li><a href="{{urlfor "ManagerController.Index"}}" class="item"><i class="fa fa-dashboard" aria-hidden="true"></i> 仪表盘</a> </li>
-                    <li class="active"><a href="{{urlfor "ManagerController.Users" }}" class="item"><i class="fa fa-users" aria-hidden="true"></i> 用户管理</a> </li>
-                    <li><a href="{{urlfor "ManagerController.Books" }}" class="item"><i class="fa fa-book" aria-hidden="true"></i> 项目管理</a> </li>
-                    {{/*<li><a href="{{urlfor "ManagerController.Comments" }}" class="item"><i class="fa fa-comments-o" aria-hidden="true"></i> 评论管理</a> </li>*/}}
-                    <li><a href="{{urlfor "ManagerController.Setting" }}" class="item"><i class="fa fa-cogs" aria-hidden="true"></i> 配置管理</a> </li>
-                    <li><a href="{{urlfor "ManagerController.AttachList" }}" class="item"><i class="fa fa-cloud-upload" aria-hidden="true"></i> 附件管理</a> </li>
-                </ul>
-
-            </div>
+        {{template "manager/widgets.tpl" .}}
             <div class="page-right">
                 <div class="m-box">
                     <div class="box-head">
-                        <strong class="box-title"> 成员管理</strong>
+                        <strong class="box-title"> {{i18n .Lang "mgr.member_mgr"}}</strong>
                         {{if eq .Member.Role 0}}
-                        <button type="button"  class="btn btn-success btn-sm pull-right" data-toggle="modal" data-target="#addMemberDialogModal"><i class="fa fa-user-plus" aria-hidden="true"></i> 添加成员</button>
+                        <button type="button"  class="btn btn-success btn-sm pull-right" data-toggle="modal" data-target="#addMemberDialogModal"><i class="fa fa-user-plus" aria-hidden="true"></i> {{i18n .Lang "mgr.add_member"}}</button>
                         {{end}}
                     </div>
                 </div>
                 <div class="box-body">
                     <div class="users-list" id="userList">
                         <template v-if="lists.length <= 0">
-                            <div class="text-center">暂无数据</div>
+                            <div class="text-center">{{i18n .Lang "message.no_data"}}</div>
                         </template>
                         <template v-else>
                             <table class="table">
                                 <thead>
                                 <tr>
                                     <th width="80">ID</th>
-                                    <th width="80">头像</th>
-                                    <th>账号</th>
-                                    <th>角色</th>
-                                    <th>类型</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
+                                    <th width="80">{{i18n .Lang "uc.avatar"}}</th>
+                                    <th>{{i18n .Lang "uc.username"}}</th>
+                                    <th>{{i18n .Lang "uc.realname"}}</th>
+                                    <th>{{i18n .Lang "uc.role"}}</th>
+                                    <th>{{i18n .Lang "uc.type"}}</th>
+                                    <th>{{i18n .Lang "uc.status"}}</th>
+                                    <th>{{i18n .Lang "common.operate"}}</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 <tr v-for="item in lists">
                                     <td>${item.member_id}</td>
-                                    <td><img :src="item.avatar" onerror="this.src='/static/images/middle.gif'" class="img-circle" width="34" height="34"></td>
+                                    <td><img :src="item.avatar" onerror="this.src='{{cdnimg "/static/images/middle.gif"}}'" class="img-circle" width="34" height="34"></td>
                                     <td>${item.account}</td>
+                                    <td>${item.real_name}</td>
                                     <td>
                                         <template v-if="item.role == 0">
-                                            超级管理员
+                                            {{i18n $.Lang "uc.super_admin"}}
                                         </template>
                                         <template v-else-if="item.member_id == {{.Member.MemberId}}">
                                             ${item.role_name}
@@ -80,8 +75,9 @@
                                                 ${item.role_name}
                                                 <span class="caret"></span></button>
                                             <ul class="dropdown-menu">
-                                                <li><a href="javascript:;" @click="setMemberRole(item.member_id,1)">管理员</a> </li>
-                                                <li><a href="javascript:;" @click="setMemberRole(item.member_id,2)">普通用户</a> </li>
+                                                <li><a href="javascript:;" @click="setMemberRole(item.member_id,1)">{{i18n $.Lang "uc.admin"}}</a> </li>
+                                                <li><a href="javascript:;" @click="setMemberRole(item.member_id,2)">{{i18n $.Lang "uc.user"}}</a> </li>
+                                                <li><a href="javascript:;" @click="setMemberRole(item.member_id,3)">{{i18n $.Lang "uc.read_usr"}}</a> </li>
                                             </ul>
                                             </div>
                                         </template>
@@ -91,10 +87,10 @@
                                     </td>
                                     <td>
                                         <template v-if="item.status == 0">
-                                            <span class="label label-success">正常</span>
+                                            <span class="label label-success">{{i18n .Lang "uc.normal"}}</span>
                                         </template>
                                         <template v-else>
-                                            <span class="label label-danger">禁用</span>
+                                            <span class="label label-danger">{{i18n .Lang "uc.disable"}}</span>
                                         </template>
                                     </td>
 
@@ -104,15 +100,15 @@
                                         </template>
                                         <template v-else-if="item.role != 0">
                                             <a :href="'{{urlfor "ManagerController.EditMember" ":id" ""}}' + item.member_id" class="btn btn-sm btn-default" @click="editMember(item.member_id)">
-                                                编辑
+                                                {{i18n .Lang "common.edit"}}
                                             </a>
                                             <template v-if="item.status == 0">
-                                                <button type="button" class="btn btn-danger btn-sm" @click="setMemberStatus(item.member_id,1,$event)" data-loading-text="启用中...">禁用</button>
+                                                <button type="button" class="btn btn-danger btn-sm" @click="setMemberStatus(item.member_id,1,$event)" data-loading-text="{{i18n .Lang "message.processing"}}">{{i18n .Lang "uc.disable"}}</button>
                                             </template>
                                             <template v-else>
-                                                <button type="button" class="btn btn-success btn-sm" @click="setMemberStatus(item.member_id,0,$event)" data-loading-text="禁用中...">启用</button>
+                                                <button type="button" class="btn btn-success btn-sm" @click="setMemberStatus(item.member_id,0,$event)" data-loading-text="{{i18n .Lang "message.processing"}}">{{i18n .Lang "uc.enable"}}</button>
                                             </template>
-                                            <button type="button" class="btn btn-danger btn-sm" @click="deleteMember(item.member_id,$event)" data-loading-text="删除中">删除</button>
+                                            <button type="button" class="btn btn-danger btn-sm" @click="deleteMember(item.member_id,$event)" data-loading-text="{{i18n .Lang "message.processing"}}">{{i18n .Lang "common.delete"}}</button>
                                         </template>
                                     </td>
                                 </tr>
@@ -136,45 +132,51 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="myModalLabel">创建用户</h4>
+                    <h4 class="modal-title" id="myModalLabel">{{i18n .Lang "uc.create_user"}}</h4>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="account">账号<span class="error-message">*</span></label>
+                        <label class="col-sm-2 control-label" for="account">{{i18n .Lang "uc.username"}}<span class="error-message">*</span></label>
                         <div class="col-sm-10">
-                            <input type="text" name="account" class="form-control" placeholder="用户账号" id="account" maxlength="50">
+                            <input type="text" name="account" class="form-control" placeholder="{{i18n .Lang "uc.username"}}" id="account" maxlength="50">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="password1">密码<span class="error-message">*</span></label>
+                        <label class="col-sm-2 control-label" for="password1">{{i18n .Lang "uc.password"}}<span class="error-message">*</span></label>
                         <div class="col-sm-10">
-                            <input type="password" class="form-control" placeholder="用户密码" name="password1" id="password1" maxlength="50">
+                            <input type="password" class="form-control" placeholder="{{i18n .Lang "uc.password"}}" name="password1" id="password1" maxlength="50">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="password2">确认密码<span class="error-message">*</span></label>
+                        <label class="col-sm-2 control-label" for="password2">{{i18n .Lang "uc.confirm_pwd"}}<span class="error-message">*</span></label>
                         <div class="col-sm-10">
-                            <input type="password" class="form-control" placeholder="确认密码" name="password2" id="password2" maxlength="50">
+                            <input type="password" class="form-control" placeholder="{{i18n .Lang "uc.confirm_pwd"}}" name="password2" id="password2" maxlength="50">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="email">邮箱<span class="error-message">*</span></label>
+                        <label class="col-sm-2 control-label" for="email">{{i18n .Lang "uc.email"}}<span class="error-message">*</span></label>
                         <div class="col-sm-10">
-                            <input type="email" class="form-control" placeholder="邮箱" name="email" id="email" maxlength="50">
+                            <input type="email" class="form-control" placeholder="{{i18n .Lang "uc.email"}}" name="email" id="email" maxlength="50">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">手机号</label>
+                        <label class="col-sm-2 control-label">{{i18n .Lang "uc.realname"}}</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" placeholder="手机号" name="phone" maxlength="50">
+                            <input type="text" name="real_name" class="form-control" value="" placeholder="{{i18n .Lang "uc.realname"}}">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label">角色</label>
+                        <label class="col-sm-2 control-label">{{i18n .Lang "uc.mobile"}}</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" placeholder="{{i18n .Lang "uc.mobile"}}" name="phone" maxlength="50">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">{{i18n .Lang "uc.role"}}</label>
                         <div class="col-sm-10">
                             <select name="role" class="form-control">
-                                <option value="1">管理员</option>
-                                <option value="2">普通用户</option>
+                                <option value="1">{{i18n .Lang "uc.admin"}}</option>
+                                <option value="2">{{i18n .Lang "uc.user"}}</option>
                             </select>
                         </div>
                     </div>
@@ -185,18 +187,18 @@
                 </div>
                 <div class="modal-footer">
                     <span id="form-error-message"></span>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-                    <button type="submit" class="btn btn-success" data-loading-text="保存中..." id="btnAddMember">保存</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">{{i18n .Lang "common.cancel"}}</button>
+                    <button type="submit" class="btn btn-success" data-loading-text="{{i18n .Lang "message.processing"}}" id="btnAddMember">{{i18n .Lang "common.save"}}</button>
                 </div>
             </div>
         </form>
     </div>
 </div><!--END Modal-->
-<script src="/static/jquery/1.12.4/jquery.min.js"></script>
-<script src="/static/bootstrap/js/bootstrap.min.js"></script>
-<script src="/static/vuejs/vue.min.js"></script>
-<script src="/static/js/jquery.form.js" type="text/javascript"></script>
-<script src="/static/js/main.js" type="text/javascript"></script>
+<script src="{{cdnjs "/static/jquery/1.12.4/jquery.min.js"}}"></script>
+<script src="{{cdnjs "/static/bootstrap/js/bootstrap.min.js"}}"></script>
+<script src="{{cdnjs "/static/vuejs/vue.min.js"}}"></script>
+<script src="{{cdnjs "/static/js/jquery.form.js"}}" type="text/javascript"></script>
+<script src="{{cdnjs "/static/js/main.js"}}" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
         $("#addMemberDialogModal").on("show.bs.modal",function () {
@@ -208,20 +210,20 @@
             beforeSubmit : function () {
                 var account = $.trim($("#account").val());
                 if(account === ""){
-                    return showError("账号不能为空");
+                    return showError({{i18n .Lang "message.account_empty"}});
                 }
                 var password1 = $.trim($("#password1").val());
                 var password2 = $("#password2").val();
                 if (password1 === "") {
-                    return showError("密码不能为空");
+                    return showError({{i18n .Lang "message.password_empty"}});
                 }
                 if (password1 !== password2) {
-                    return showError("确认密码不正确");
+                    return showError({{i18n .Lang "message.confirm_pwd_empty"}});
                 }
                 var email = $.trim($("#email").val());
 
                 if (email === "") {
-                    return showError("邮箱不能为空");
+                    return showError({{i18n .Lang "message.email_empty"}});
                 }
                 $("#btnAddMember").button("loading");
                 return true;
@@ -236,7 +238,7 @@
                 $("#btnAddMember").button("reset");
             },
             error : function () {
-                showError("服务器异常");
+                showError({{i18n .Lang "message.system_error"}});
                 $("#btnAddMember").button("reset");
             }
         });
@@ -269,7 +271,7 @@
                                     }
                                 }
                             } else {
-                                alert("操作失败：" + res.message);
+                                alert("{{i18n .Lang "message.failed"}}：" + res.message);
                             }
                         }
                     })
@@ -294,7 +296,7 @@
                                     }
                                 }
                             }else{
-                                alert("操作失败：" + res.message);
+                                alert("{{i18n .Lang "message.failed"}}：" + res.message);
                             }
                         }
                     })
@@ -318,7 +320,7 @@
                                     }
                                 }
                             } else {
-                                alert("操作失败：" + res.message);
+                                alert("{{i18n .Lang "message.failed"}}：" + res.message);
                             }
                         }
                     });

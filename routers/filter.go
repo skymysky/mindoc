@@ -1,43 +1,63 @@
 package routers
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context"
-	"github.com/lifei6671/mindoc/conf"
-	"github.com/lifei6671/mindoc/models"
 	"encoding/json"
+	"net/url"
+	"regexp"
+
+	"github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
+
+	"github.com/mindoc-org/mindoc/conf"
+	"github.com/mindoc-org/mindoc/mcp"
+	"github.com/mindoc-org/mindoc/models"
 )
 
-func init()  {
+func init() {
 	var FilterUser = func(ctx *context.Context) {
 		_, ok := ctx.Input.Session(conf.LoginSessionName).(models.Member)
 
 		if !ok {
 			if ctx.Input.IsAjax() {
-				jsonData := make(map[string]interface{},3)
+				jsonData := make(map[string]interface{}, 3)
 
 				jsonData["errcode"] = 403
 				jsonData["message"] = "请登录后再操作"
+
 				returnJSON, _ := json.Marshal(jsonData)
 
 				ctx.ResponseWriter.Write(returnJSON)
-			}else{
-				ctx.Redirect(302, beego.URLFor("AccountController.Login"))
+			} else {
+				ctx.Redirect(302, conf.URLFor("AccountController.Login")+"?url="+url.PathEscape(conf.BaseUrl+ctx.Request.URL.RequestURI()))
 			}
 		}
 	}
-	beego.InsertFilter("/manager",beego.BeforeRouter,FilterUser)
-	beego.InsertFilter("/manager/*",beego.BeforeRouter,FilterUser)
-	beego.InsertFilter("/setting",beego.BeforeRouter,FilterUser)
-	beego.InsertFilter("/setting/*",beego.BeforeRouter,FilterUser)
-	beego.InsertFilter("/book",beego.BeforeRouter,FilterUser)
-	beego.InsertFilter("/book/*",beego.BeforeRouter,FilterUser)
-	beego.InsertFilter("/api/*",beego.BeforeRouter,FilterUser)
+	web.InsertFilter("/manager", web.BeforeRouter, FilterUser)
+	web.InsertFilter("/manager/*", web.BeforeRouter, FilterUser)
+	web.InsertFilter("/setting", web.BeforeRouter, FilterUser)
+	web.InsertFilter("/setting/*", web.BeforeRouter, FilterUser)
+	web.InsertFilter("/book", web.BeforeRouter, FilterUser)
+	web.InsertFilter("/book/*", web.BeforeRouter, FilterUser)
+	web.InsertFilter("/api/*", web.BeforeRouter, FilterUser)
+	web.InsertFilter("/manage/*", web.BeforeRouter, FilterUser)
+	web.InsertFilter("/mcp/*", web.BeforeRouter, mcp.AuthMiddleware)
 
 	var FinishRouter = func(ctx *context.Context) {
-		ctx.ResponseWriter.Header().Add("MinDoc-Version",conf.VERSION)
-		ctx.ResponseWriter.Header().Add("MinDoc-Site","http://www.iminho.me")
+		ctx.ResponseWriter.Header().Add("MinDoc-Version", conf.VERSION)
+		ctx.ResponseWriter.Header().Add("MinDoc-Site", "https://www.iminho.me")
+		ctx.ResponseWriter.Header().Add("X-XSS-Protection", "1; mode=block")
 	}
 
-	beego.InsertFilter("/*",beego.BeforeRouter ,FinishRouter, false)
+	var StartRouter = func(ctx *context.Context) {
+		sessname, _ := web.AppConfig.String("sessionname")
+		sessionId := ctx.Input.Cookie(sessname)
+		if sessionId != "" {
+			//sessionId必须是数字字母组成，且最小32个字符，最大1024字符
+			if ok, err := regexp.MatchString(`^[a-zA-Z0-9]{32,512}$`, sessionId); !ok || err != nil {
+				panic("401")
+			}
+		}
+	}
+	web.InsertFilter("/*", web.BeforeStatic, StartRouter, web.WithReturnOnOutput(false))
+	web.InsertFilter("/*", web.BeforeRouter, FinishRouter, web.WithReturnOnOutput(false))
 }
